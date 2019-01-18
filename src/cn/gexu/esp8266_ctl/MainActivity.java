@@ -15,6 +15,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements View.OnClickListener,
 		Handler.Callback {
@@ -25,15 +26,16 @@ public class MainActivity extends Activity implements View.OnClickListener,
 	private TextView show;
 
 	// 非UI线程的handler处理机制
-	private HandlerThread txThread = new HandlerThread("netThread");
-	private Handler handler = new Handler(txThread.getLooper(), this);
-	private TCPConn conn = new TCPConn(handler, WHAT_TCP_Response,
-			WHAT_Default_Err);
+	private HandlerThread txThread;
+	private Handler handler;
+	private TCPConn conn;
 
-	private static final int WHAT_LoadIotList = 1;
-	private static final int WHAT_TCP_Request = 2;
-	private static final int WHAT_TCP_Response = 3;
-	private static final int WHAT_Default_Err = -1;
+	public static final int WHAT_LoadIotList = 1;
+	public static final int WHAT_TCP_Request = 2;
+	public static final int WHAT_TCP_Response = 3;
+	public static final int WHAT_TCP_OnConnect = 4;
+	public static final int WHAT_TCP_OnDisconnect = 5;
+	public static final int WHAT_Default_Err = -1;
 
 	private static Handler uiHandler = new Handler() {
 		@Override
@@ -45,21 +47,39 @@ public class MainActivity extends Activity implements View.OnClickListener,
 		}
 	};
 
+	private static byte[] toBytes(int... codes) {
+		int len = codes.length;
+		byte[] ba = new byte[len];
+		for (int i = 0; i < len; i++) {
+			ba[i] = (byte) codes[i];
+		}
+		return ba;
+	}
+
 	public MainActivity() {
-		btnKeys.put(R.id.btn_hall_A, new byte[] {});
-		btnKeys.put(R.id.btn_hall_B, new byte[] {});
-		btnKeys.put(R.id.btn_hall_C, new byte[] {});
-		btnKeys.put(R.id.btn_hall_D, new byte[] {});
-		btnKeys.put(R.id.btn_big_room_ON, new byte[] {});
-		btnKeys.put(R.id.btn_big_room_OFF, new byte[] {});
-		btnKeys.put(R.id.btn_small_room_ON, new byte[] {});
-		btnKeys.put(R.id.btn_small_room_OFF, new byte[] {});
-		btnKeys.put(R.id.btn_charge_ON, new byte[] {});
-		btnKeys.put(R.id.btn_charge_OFF, new byte[] {});
-		btnKeys.put(R.id.btn_rest_room_A, new byte[] {});
-		btnKeys.put(R.id.btn_rest_room_B, new byte[] {});
-		btnKeys.put(R.id.btn_rest_room_C, new byte[] {});
-		btnKeys.put(R.id.btn_rest_room_D, new byte[] {});
+		btnKeys.put(R.id.btn_hall_A, toBytes());
+		btnKeys.put(R.id.btn_hall_B, toBytes());
+		btnKeys.put(R.id.btn_hall_C, toBytes());
+		btnKeys.put(R.id.btn_hall_D, toBytes());
+		btnKeys.put(R.id.btn_big_room_ON, toBytes());
+		btnKeys.put(R.id.btn_big_room_OFF, toBytes());
+		btnKeys.put(R.id.btn_small_room_ON, toBytes());
+		btnKeys.put(R.id.btn_small_room_OFF, toBytes());
+		btnKeys.put(R.id.btn_charge_ON, toBytes());
+		btnKeys.put(R.id.btn_charge_OFF, toBytes());
+		btnKeys.put(R.id.btn_rest_room_A,
+				toBytes(0xFD, 0x1B, 0xCD, 0xD8, 0x56, 0xDF));
+		btnKeys.put(R.id.btn_rest_room_B,
+				toBytes(0xFD, 0x1B, 0xCD, 0xD4, 0x56, 0xDF));
+		btnKeys.put(R.id.btn_rest_room_C,
+				toBytes(0xFD, 0x1B, 0xCD, 0xD2, 0x56, 0xDF));
+		btnKeys.put(R.id.btn_rest_room_D,
+				toBytes(0xFD, 0x1B, 0xCD, 0xD1, 0x56, 0xDF));
+
+		txThread = new HandlerThread("netThread");
+		txThread.start();
+		handler = new Handler(txThread.getLooper(), this);
+		conn = new TCPConn(handler);
 	}
 
 	@Override
@@ -76,8 +96,16 @@ public class MainActivity extends Activity implements View.OnClickListener,
 			processResponse(buf);
 			break;
 		case WHAT_Default_Err:
-			Exception e = (Exception) msg.obj;
-			showTextView(show, e.getMessage());
+			String emsg = (String) msg.obj;
+			showTextView(show, emsg);
+			break;
+		case WHAT_TCP_OnConnect:
+			Toast.makeText(this, "和服务器连接成功", Toast.LENGTH_LONG).show();
+			handler.sendEmptyMessageDelayed(WHAT_LoadIotList, 500);
+			break;
+		case WHAT_TCP_OnDisconnect:
+			Toast.makeText(this, "和服务器断开连接，马上重新连接", Toast.LENGTH_SHORT).show();
+			showTextView(iotList, "和服务器断开");
 			break;
 		default:
 			return false;
@@ -94,6 +122,10 @@ public class MainActivity extends Activity implements View.OnClickListener,
 	@SuppressLint("SimpleDateFormat")
 	private void showIotCount(byte[] buf, int offset, int len) {
 		int iotCount = buf[offset];
+		if (iotCount == 0) {
+			showTextView(iotList, "还没有iot设备");
+			return;
+		}
 		if ((len - 1) % 4 != 0) {
 			// 数据长度不对
 			showTextView(show, "iotList数据不正常");
@@ -160,6 +192,10 @@ public class MainActivity extends Activity implements View.OnClickListener,
 	@Override
 	public void onClick(View v) {
 		byte[] ctl = btnKeys.get(v.getId());
+		if (ctl == null || ctl.length == 0) {
+			Toast.makeText(this, "还没有配置控制指令", Toast.LENGTH_LONG).show();
+			return;
+		}
 		byte[] msgData = new byte[ctl.length + 1];
 		msgData[0] = 11;
 		System.arraycopy(ctl, 0, msgData, 1, ctl.length);
@@ -188,6 +224,5 @@ public class MainActivity extends Activity implements View.OnClickListener,
 
 		iotList = (TextView) findViewById(R.id.iot_list);
 		show = (TextView) findViewById(R.id.main_show);
-		handler.sendEmptyMessage(WHAT_LoadIotList);
 	}
 }

@@ -162,9 +162,11 @@
         android:id="@+id/iot_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textSize="@dimen/label_text_size"
         android:text="@string/main_lable_iot_list"/>
     <TextView 
         android:id="@+id/main_show"
+        android:textSize="@dimen/label_text_size"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
