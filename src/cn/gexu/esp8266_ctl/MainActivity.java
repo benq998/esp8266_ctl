@@ -115,7 +115,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
 
 	private void showTextView(TextView view, String text) {
 		Message m = uiHandler.obtainMessage();
-		m.obj = new Object[] { show, text };
+		m.obj = new Object[] { view, text };
 		uiHandler.sendMessage(m);
 	}
 
@@ -126,9 +126,9 @@ public class MainActivity extends Activity implements View.OnClickListener,
 			showTextView(iotList, "还没有iot设备");
 			return;
 		}
-		if ((len - 1) % 4 != 0) {
+		if ((len - 1) % 10 != 0) {
 			// 数据长度不对
-			showTextView(show, "iotList数据不正常");
+			showTextView(iotList, "iotList数据不正常");
 			return;
 		}
 		try {
@@ -136,7 +136,6 @@ public class MainActivity extends Activity implements View.OnClickListener,
 					offset + 1, len - 1);
 			DataInputStream dis = new DataInputStream(bais);
 			StringBuilder textBuf = new StringBuilder(100);
-			textBuf.append("设备列表:");
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 			Calendar cal = Calendar.getInstance();
 			for (int i = 0; i < iotCount; i++) {
@@ -145,7 +144,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
 				int ip2 = dis.read();
 				int ip3 = dis.read();
 				int port = dis.readShort();
-				int ts = dis.readInt();
+				long ts = dis.readInt();
 				cal.setTimeInMillis(ts * 1000);
 				textBuf.append(ip0).append('.').append(ip1).append('.')
 						.append(ip2).append('.').append(ip3).append(':')

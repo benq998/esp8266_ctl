@@ -12,6 +12,7 @@ public final class R {
     }
     public static final class dimen {
         public static final int label_text_size=0x7f040000;
+        public static final int label_text_size_small=0x7f040001;
     }
     public static final class drawable {
         public static final int ic_launcher=0x7f020000;
