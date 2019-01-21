@@ -8,11 +8,11 @@
 	<string name="main_label_btn_ON">开</string>
     <string name="main_label_btn_OFF">关</string>
     
-    <string name="main_label_hall">客厅控制</string>
-    <string name="main_label_big_room">大屋</string>
-    <string name="main_label_small_room">小屋</string>
+    <string name="main_label_hall">客厅灯</string>
+    <string name="main_label_big_room">大屋灯</string>
+    <string name="main_label_small_room">小屋灯</string>
     <string name="main_label_charge">充电桩</string>
-    <string name="main_label_rest_room">卫生间</string>
+    <string name="main_label_rest_room">卫生间浴霸&amp;照明</string>
     
     <string name="main_lable_iot_list">设备列表</string>
 </resources>

@@ -36,6 +36,8 @@ public class MainActivity extends Activity implements View.OnClickListener,
 	public static final int WHAT_TCP_OnConnect = 4;
 	public static final int WHAT_TCP_OnDisconnect = 5;
 	public static final int WHAT_Default_Err = -1;
+	
+	public static final int during_time = 0x01;
 
 	private static Handler uiHandler = new Handler() {
 		@Override
@@ -57,24 +59,32 @@ public class MainActivity extends Activity implements View.OnClickListener,
 	}
 
 	public MainActivity() {
-		btnKeys.put(R.id.btn_hall_A, toBytes());
-		btnKeys.put(R.id.btn_hall_B, toBytes());
-		btnKeys.put(R.id.btn_hall_C, toBytes());
-		btnKeys.put(R.id.btn_hall_D, toBytes());
-		btnKeys.put(R.id.btn_big_room_ON, toBytes());
-		btnKeys.put(R.id.btn_big_room_OFF, toBytes());
-		btnKeys.put(R.id.btn_small_room_ON, toBytes());
-		btnKeys.put(R.id.btn_small_room_OFF, toBytes());
+		btnKeys.put(R.id.btn_hall_A,
+				toBytes(0xFD, 0x01, during_time, 0xC6, 0xF8, 0xD8, 0x53, 0xDF));
+		btnKeys.put(R.id.btn_hall_B,
+				toBytes(0xFD, 0x01, during_time, 0xC6, 0xF8, 0xD4, 0x53, 0xDF));
+		btnKeys.put(R.id.btn_hall_C,
+				toBytes(0xFD, 0x01, during_time, 0xC6, 0xF8, 0xD2, 0x53, 0xDF));
+		btnKeys.put(R.id.btn_hall_D,
+				toBytes(0xFD, 0x01, during_time, 0xC6, 0xF8, 0xD1, 0x53, 0xDF));
+		btnKeys.put(R.id.btn_big_room_ON,
+				toBytes(0xFD, 0x01, during_time, 0x67, 0x26, 0x04, 0x5A, 0xDF));
+		btnKeys.put(R.id.btn_big_room_OFF,
+				toBytes(0xFD, 0x01, during_time, 0x67, 0x26, 0x02, 0x5A, 0xDF));
+		btnKeys.put(R.id.btn_small_room_ON,
+				toBytes(0xFD, 0x01, during_time, 0xAE, 0xBF, 0xF4, 0x56, 0xDF));
+		btnKeys.put(R.id.btn_small_room_OFF,
+				toBytes(0xFD, 0x01, during_time, 0xAE, 0xBF, 0xF2, 0x56, 0xDF));
 		btnKeys.put(R.id.btn_charge_ON, toBytes());
 		btnKeys.put(R.id.btn_charge_OFF, toBytes());
 		btnKeys.put(R.id.btn_rest_room_A,
-				toBytes(0xFD, 0x1B, 0xCD, 0xD8, 0x56, 0xDF));
+				toBytes(0xFD, 0x01, during_time, 0x1B, 0xCD, 0xD8, 0x56, 0xDF));
 		btnKeys.put(R.id.btn_rest_room_B,
-				toBytes(0xFD, 0x1B, 0xCD, 0xD4, 0x56, 0xDF));
+				toBytes(0xFD, 0x01, during_time, 0x1B, 0xCD, 0xD4, 0x56, 0xDF));
 		btnKeys.put(R.id.btn_rest_room_C,
-				toBytes(0xFD, 0x1B, 0xCD, 0xD2, 0x56, 0xDF));
+				toBytes(0xFD, 0x01, during_time, 0x1B, 0xCD, 0xD2, 0x56, 0xDF));
 		btnKeys.put(R.id.btn_rest_room_D,
-				toBytes(0xFD, 0x1B, 0xCD, 0xD1, 0x56, 0xDF));
+				toBytes(0xFD, 0x01, during_time, 0x1B, 0xCD, 0xD1, 0x56, 0xDF));
 
 		txThread = new HandlerThread("netThread");
 		txThread.start();
@@ -138,7 +148,11 @@ public class MainActivity extends Activity implements View.OnClickListener,
 			StringBuilder textBuf = new StringBuilder(100);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 			Calendar cal = Calendar.getInstance();
+			textBuf.append("设备列表:\n");
 			for (int i = 0; i < iotCount; i++) {
+				if (i > 0) {
+					textBuf.append('\n');
+				}
 				int ip0 = dis.read();
 				int ip1 = dis.read();
 				int ip2 = dis.read();
